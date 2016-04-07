@@ -50,7 +50,7 @@ class Itau240(Cnab240):
         vals['cedente_dv_ag_cc'] = int(
             vals['cedente_dv_ag_cc'])
         vals['cedente_agencia_dv'] = int(
-            vals['cedente_agencia_dv']),
+            vals['cedente_agencia_dv'])
         return vals
 
     def _prepare_segmento(self, line):
