@@ -173,7 +173,7 @@ class Cnab240(Cnab):
             # 04.1 # Header do lote sempre 'C'
             'servico_operacao': 'C',
             # 05.1
-            'servico_servico': self.order.order.mode.tipo_servico,
+            'servico_servico': self.order.mode.tipo_servico,
             # 06.1
             'servico_forma_lancamento': 1,
             # 07.1
@@ -386,7 +386,7 @@ class Cnab240(Cnab):
             # 25.3A
             # 'codigo_finalidade_doc': line.codigo_finalidade_doc,
             # 26.3A
-            'codigo_finalidade_ted': self.order.mode.finalidade_ted or ''
+            'codigo_finalidade_ted': self.order.mode.finalidade_ted or '',
             # 27.3A
             'codigo_finalidade_complementar':
                 self.order.mode.finalidade_complementar or '',
