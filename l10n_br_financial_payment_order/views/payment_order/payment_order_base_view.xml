@@ -13,7 +13,7 @@
             <field name="arch" type="xml">
                 <tree colors="blue:state == 'draft';gray:state in ('cancel','done');black:state == 'open'" string="Payment order">
                     <field name="reference"/>
-                    <field name="mode"/>
+                    <field name="mode"/>= 'pay
                     <field name="tipo_pagamento"/>
                     <field name="user_id"/>
                     <field name="company_id" groups="base.group_multi_company"/>
