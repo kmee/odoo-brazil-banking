@@ -4,6 +4,8 @@
 
 from __future__ import division, print_function, unicode_literals
 
+import datetime
+
 from openerp import api, fields, models, _
 
 from pybrasil.febraban import (valida_codigo_barras, valida_linha_digitavel,
@@ -34,6 +36,10 @@ class FinancialMove(models.Model):
     )
     boleto_carteira = fields.Char(
         related='payment_mode_id.boleto_carteira',
+        store=True,
+    )
+    tipo_documento = fields.Char(
+        related='document_type_id.name',
         store=True,
     )
     #
@@ -126,16 +132,25 @@ class FinancialMove(models.Model):
     @api.multi
     def button_boleto(self):
         for financial_move in self:
-
             # Boleto do Sindicato
             if financial_move.payment_mode_id.boleto_carteira == 'SIND':
-                action = self.env['report'].get_action(self,
-                    b'l10n_br_financial_payment_order.py3o_boleto_sindicato')
+                action = self.env['report'].get_action(
+                    self,
+                    b'l10n_br_financial_payment_order.py3o_boleto_sindicato'
+                )
+
+            # Guia DARF
+            elif financial_move.document_type_id.name == 'DARF':
+                action = self.env['report'].get_action(
+                    self, b'l10n_br_financial_payment_order.py3o_darf'
+                )
 
             # Boleto generico
             else:
-                action = self.env['report'].get_action(self,
-                   b'l10n_br_financial_payment_order.py3o_boleto_generico')
+                action = self.env['report'].get_action(
+                    self,
+                    b'l10n_br_financial_payment_order.py3o_boleto_generico'
+                )
         return action
 
     @api.multi
@@ -202,3 +217,63 @@ class FinancialMove(models.Model):
             #     continue
 
         return boleto_list
+
+    def last_day_of_month(self, any_day):
+        next_month = any_day.replace(day=28) + datetime.timedelta(days=4)
+        next_month -= datetime.timedelta(days=next_month.day)
+        return next_month.day
+
+    @api.multi
+    def gera_darf(self):
+        class DarfObj(object):
+            def __init__(self, dados_darf):
+                self.legal_name = dados_darf['legal_name']
+                self.telefone = dados_darf['telefone']
+                self.cnpj = dados_darf['cnpj']
+                self.periodo_apuracao = dados_darf['periodo_apuracao']
+                # self.cod_receita = dados_darf['cod_receita']
+                # self.num_referencia = dados_darf['num_referencia']
+                self.vencimento = dados_darf['vencimento']
+                self.valor_principal = dados_darf['valor_principal']
+                self.valor_multa = dados_darf['valor_multa']
+                self.valor_juros_encargos = dados_darf['valor_juros_encargos']
+                self.valor_total = dados_darf['valor_total']
+
+        dados_darf = {}
+        for financial_move in self:
+            mes = financial_move.doc_source_id.mes
+            ano = financial_move.doc_source_id.ano
+            ultimo_dia_mes = self.last_day_of_month(
+                datetime.date(
+                    int(ano),
+                    int(mes),
+                    1
+                )
+            )
+            periodo_apuracao = str(ultimo_dia_mes) + '/' + str(mes) + '/' + \
+                str(ano)
+            dados_darf['legal_name'] = financial_move.company_id.legal_name
+            dados_darf['telefone'] = financial_move.company_id.phone
+            dados_darf['cnpj'] = financial_move.company_id.cnpj_cpf
+            dados_darf['periodo_apuracao'] = periodo_apuracao
+            # dados_darf['cod_receita'] =
+            # dados_darf['num_referencia'] =
+            data_vencimento = \
+                fields.Date.from_string(financial_move.date_maturity)
+            dia = '0' + str(data_vencimento.day) if data_vencimento.day < \
+                10 else data_vencimento.day
+            mes = '0' + str(data_vencimento.month) if data_vencimento.month < \
+                10 else data_vencimento.month
+            dados_darf['vencimento'] = \
+                dia + '/' + mes + '/' + str(data_vencimento.year)
+            valor_principal = financial_move.amount_document
+            valor_multa = 0.00
+            valor_juros_encargos = 0.00
+            valor_total = valor_principal + valor_multa + valor_juros_encargos
+            dados_darf['valor_principal'] = \
+                '{:.2f}'.format(valor_principal)
+            dados_darf['valor_multa'] = '0,00'
+            dados_darf['valor_juros_encargos'] = '0,00'
+            dados_darf['valor_total'] = '{:.2f}'.format(valor_total)
+
+        return DarfObj(dados_darf)

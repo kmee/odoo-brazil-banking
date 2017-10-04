@@ -5,3 +5,4 @@
 from . import py3o_boleto
 from . import py3o_boleto_sindicato
 from . import report_boleto
+from . import py3o_darf
