@@ -340,11 +340,8 @@ class FinancialMove(models.Model):
                 dia + '/' + mes + '/' + str(data_vencimento.year)
             valor_inss, valor_outras_entidades = \
                 self._buscar_valores_inss(self.company_id.id)
-            dados_gps['valor_inss'] = \
-                '{:.2f}'.format(valor_inss)
-            dados_gps['valor_outras_entidades'] = '{:.2f}'.format(
-                valor_outras_entidades)
-            dados_gps['valor_total'] = '{:.2f}'.format(
-                financial_move.amount_document)
+            dados_gps['valor_inss'] = valor_inss
+            dados_gps['valor_outras_entidades'] = valor_outras_entidades
+            dados_gps['valor_total'] = financial_move.amount_document
 
         return GpsObj(dados_gps)
