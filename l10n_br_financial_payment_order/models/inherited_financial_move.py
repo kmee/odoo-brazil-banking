@@ -132,19 +132,22 @@ class FinancialMove(models.Model):
     @api.multi
     def button_boleto(self):
         for financial_move in self:
+            # Guia DARF
+            if financial_move.document_type_id.name == 'DARF':
+                action = self.env['report'].get_action(
+                    self, b'l10n_br_financial_payment_order.py3o_darf'
+                )
+            # Guia GPS
+            elif financial_move.document_type_id.name == 'GPS':
+                action = self.env['report'].get_action(
+                    self, b'l10n_br_financial_payment_order.py3o_gps'
+                )
             # Boleto do Sindicato
-            if financial_move.payment_mode_id.boleto_carteira == 'SIND':
+            elif financial_move.payment_mode_id.boleto_carteira == 'SIND':
                 action = self.env['report'].get_action(
                     self,
                     b'l10n_br_financial_payment_order.py3o_boleto_sindicato'
                 )
-
-            # Guia DARF
-            elif financial_move.document_type_id.name == 'DARF':
-                action = self.env['report'].get_action(
-                    self, b'l10n_br_financial_payment_order.py3o_darf'
-                )
-
             # Boleto generico
             else:
                 action = self.env['report'].get_action(
@@ -277,3 +280,71 @@ class FinancialMove(models.Model):
             dados_darf['valor_total'] = '{:.2f}'.format(valor_total)
 
         return DarfObj(dados_darf)
+
+    @api.multi
+    def _buscar_valores_inss(self, company_id):
+        valor_inss = 0.0
+        valor_outras_entidades = 0.0
+        for holerite in self.doc_source_id.folha_ids:
+            if holerite.company_id.id == company_id:
+                for line in holerite.line_ids:
+                    if line.code in [
+                        'INSS', 'INSS_EMPRESA', 'INSS_RAT_FAP'
+                    ]:
+                        valor_inss += line.total
+                    if line.code == 'INSS_OUTRAS_ENTIDADES':
+                        valor_outras_entidades += line.total
+
+        return valor_inss, valor_outras_entidades
+
+    @api.multi
+    def gera_gps(self):
+        class GpsObj(object):
+            def __init__(self, dados_gps):
+                self.legal_name = dados_gps['legal_name']
+                self.telefone = dados_gps['telefone']
+                self.cnpj = dados_gps['cnpj']
+                self.endereco = dados_gps['endereco']
+                self.numero = dados_gps['numero']
+                self.bairro = dados_gps['bairro']
+                self.cidade = dados_gps['cidade']
+                self.estado = dados_gps['estado']
+                self.cep = dados_gps['cep']
+                self.competencia = dados_gps['competencia']
+                self.vencimento = dados_gps['vencimento']
+                self.valor_inss = dados_gps['valor_inss']
+                self.valor_outras_entidades = \
+                    dados_gps['valor_outras_entidades']
+                self.valor_total = dados_gps['valor_total']
+
+        dados_gps = {}
+        for financial_move in self:
+            dados_gps['legal_name'] = financial_move.company_id.legal_name
+            dados_gps['telefone'] = financial_move.company_id.phone
+            dados_gps['cnpj'] = financial_move.company_id.cnpj_cpf
+            dados_gps['endereco'] = financial_move.company_id.street
+            dados_gps['numero'] = financial_move.company_id.number
+            dados_gps['bairro'] = financial_move.company_id.district
+            dados_gps['cidade'] = financial_move.company_id.l10n_br_city_id.name
+            dados_gps['estado'] = financial_move.company_id.state_id.name
+            dados_gps['cep'] = financial_move.company_id.zip
+            dados_gps['competencia'] = financial_move.doc_source_id.mes + \
+                '/' + financial_move.doc_source_id.ano
+            data_vencimento = \
+                fields.Date.from_string(financial_move.date_maturity)
+            dia = '0' + str(data_vencimento.day) if data_vencimento.day < \
+                10 else data_vencimento.day
+            mes = '0' + str(data_vencimento.month) if data_vencimento.month < \
+                10 else data_vencimento.month
+            dados_gps['vencimento'] = \
+                dia + '/' + mes + '/' + str(data_vencimento.year)
+            valor_inss, valor_outras_entidades = \
+                self._buscar_valores_inss(self.company_id.id)
+            dados_gps['valor_inss'] = \
+                '{:.2f}'.format(valor_inss)
+            dados_gps['valor_outras_entidades'] = '{:.2f}'.format(
+                valor_outras_entidades)
+            dados_gps['valor_total'] = '{:.2f}'.format(
+                financial_move.amount_document)
+
+        return GpsObj(dados_gps)
