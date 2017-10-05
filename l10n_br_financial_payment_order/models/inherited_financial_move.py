@@ -227,6 +227,26 @@ class FinancialMove(models.Model):
         return next_month.day
 
     @api.multi
+    def _buscar_codigo_darf(self):
+        darfs = {}
+        for holerite in self.doc_source_id.folha_ids:
+            for line in holerite.line_ids:
+                if line.code == 'IRPF':
+                    if darfs.get(line.salary_rule_id.codigo_darf):
+                        darfs[line.salary_rule_id.codigo_darf] += \
+                            line.total
+                    else:
+                        darfs.update(
+                            {
+                                line.salary_rule_id.codigo_darf: line.total
+                            }
+                        )
+        for cod_darf in darfs:
+            if darfs[cod_darf] == self.amount_document:
+                return cod_darf
+        return ''
+
+    @api.multi
     def gera_darf(self):
         class DarfObj(object):
             def __init__(self, dados_darf):
@@ -234,7 +254,7 @@ class FinancialMove(models.Model):
                 self.telefone = dados_darf['telefone']
                 self.cnpj = dados_darf['cnpj']
                 self.periodo_apuracao = dados_darf['periodo_apuracao']
-                # self.cod_receita = dados_darf['cod_receita']
+                self.cod_receita = dados_darf['cod_receita']
                 # self.num_referencia = dados_darf['num_referencia']
                 self.vencimento = dados_darf['vencimento']
                 self.valor_principal = dados_darf['valor_principal']
@@ -259,7 +279,7 @@ class FinancialMove(models.Model):
             dados_darf['telefone'] = financial_move.company_id.phone
             dados_darf['cnpj'] = financial_move.company_id.cnpj_cpf
             dados_darf['periodo_apuracao'] = periodo_apuracao
-            # dados_darf['cod_receita'] =
+            dados_darf['cod_receita'] = self._buscar_codigo_darf()
             # dados_darf['num_referencia'] =
             data_vencimento = \
                 fields.Date.from_string(financial_move.date_maturity)
