@@ -13,7 +13,8 @@
                 <button name="action_confirm" position="before">
                     <field name="tipo_pagamento" invisible="1"/>
                     <field name="boleto_carteira" invisible="1"/>
-                    <button name="button_boleto" type="object" string="Gerar Boleto" attrs="{'invisible': [('tipo_pagamento','!=','boleto'), ('boleto_carteira', '!=', 'SIND')]}"/>
+                    <field name="tipo_documento" invisible="1" />
+                    <button name="button_boleto" type="object" string="Gerar Boleto" attrs="{'invisible': [('tipo_documento', 'not in', ['GRCS', 'DARF', 'GPS'])]}"/>
                 </button>
             </field>
         </record>

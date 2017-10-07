@@ -47,6 +47,8 @@
         'reports/report_boleto.xml',
         'reports/py3o_boleto.xml',
         'reports/py3o_boleto_sindicato.xml',
+        'reports/py3o_darf.xml',
+        'reports/py3o_gps.xml',
         # 'security/payment_mode.xml',
         # 'security/payment_mode_type.xml',
         # 'security/bank_payment_line.xml',
