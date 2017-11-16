@@ -215,7 +215,7 @@ class Cnab240(Cnab):
             'empresa_endereco_numero': 00,
             # 21.1
             'empresa_endereco_complemento':
-                empresa.number or '' + empresa.street2 or '',
+                (empresa.number or '') + (empresa.street2 or ''),
             # 22.1
             'empresa_endereco_cidade': empresa.l10n_br_city_id.name,
             # 23.1
@@ -421,7 +421,8 @@ class Cnab240(Cnab):
             'favorecido_endereco_num': 00,
             # 11.3B
             'favorecido_endereco_complemento':
-                line.partner_id.number or '' + line.partner_id.street2 or '',
+                (line.partner_id.number or '') +
+                (line.partner_id.street2 or ''),
             # 12.3B
             'favorecido_endereco_bairro': line.partner_id.district or '',
             # 13.3B
