@@ -139,7 +139,7 @@ class Cnab240(Cnab):
             # 19.0 TODO: Número sequencial de arquivo
             'arquivo_sequencia': int(self.get_file_numeration()),
             # 20.0
-            'arquivo_layout': 103,
+            'arquivo_layout': 83,
             # 21.0
             'arquivo_densidade': 0,
             # 22.0
@@ -413,11 +413,12 @@ class Cnab240(Cnab):
                 self.get_inscricao_tipo(line.partner_id),
             # 08.3B
             'favorecido_num_inscricao':
-                int(punctuation_rm(line.partner_id.cnpj_cpf)),
+                int(punctuation_rm(line.partner_id.cnpj_cpf) or 0),
             # 09.3B
             'favorecido_endereco_rua': line.partner_id.street or '',
             # 10.3B
-            'favorecido_endereco_num': int(line.partner_id.number) or 0,
+            'favorecido_endereco_num': 0 if isinstance(
+                line.partner_id.number, int) else line.partner_id.number,
             # 11.3B
             'favorecido_endereco_complemento': line.partner_id.street2 or '',
             # 12.3B
