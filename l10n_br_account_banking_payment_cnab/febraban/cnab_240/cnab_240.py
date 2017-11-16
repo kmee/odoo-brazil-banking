@@ -142,13 +142,13 @@ class Cnab240(Cnab):
             # 19.0 TODO: Número sequencial de arquivo
             'arquivo_sequencia': int(self.get_file_numeration()),
             # 20.0
-            'arquivo_layout': 103,
+            'arquivo_layout': 83,
             # 21.0
             'arquivo_densidade': 0,
             # 22.0
             'reservado_banco': '',
             # 23.0
-            'reservado_empresa': 'EMPRESA 100',
+            'reservado_empresa': 'EMPRESA ' + str(self.order.company_id.id),
             # 24.0
             # CNAB - Uso Exclusivo FEBRABAN / CNAB
         }
