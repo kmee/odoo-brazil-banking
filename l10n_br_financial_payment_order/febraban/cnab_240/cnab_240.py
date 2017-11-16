@@ -212,9 +212,10 @@ class Cnab240(Cnab):
             # 19.1
             'empresa_logradouro': empresa.street,
             # 20.1
-            'empresa_endereco_numero': empresa.number,
+            'empresa_endereco_numero': 00,
             # 21.1
-            'empresa_endereco_complemento': empresa.street2,
+            'empresa_endereco_complemento':
+                empresa.number or '' + empresa.street2 or '',
             # 22.1
             'empresa_endereco_cidade': empresa.l10n_br_city_id.name,
             # 23.1
@@ -390,7 +391,7 @@ class Cnab240(Cnab):
             # 27.3A
             'codigo_finalidade_complementar':
                 self.order.mode.finalidade_complementar or '',
-        # 28.3A
+            # 28.3A
             # CNAB - Uso Exclusivo FEBRABAN/CNAB
             # 29.3A
             # 'aviso_ao_favorecido': line.aviso_ao_favorecido,
@@ -417,10 +418,10 @@ class Cnab240(Cnab):
             # 09.3B
             'favorecido_endereco_rua': line.partner_id.street or '',
             # 10.3B
-            'favorecido_endereco_num': 0 if isinstance(
-                line.partner_id.number, int) else line.partner_id.number,
+            'favorecido_endereco_num': 00,
             # 11.3B
-            'favorecido_endereco_complemento': line.partner_id.street2 or '',
+            'favorecido_endereco_complemento':
+                line.partner_id.number or '' + line.partner_id.street2 or '',
             # 12.3B
             'favorecido_endereco_bairro': line.partner_id.district or '',
             # 13.3B
