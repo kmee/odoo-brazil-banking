@@ -324,6 +324,24 @@ class PaymentOrder(models.Model):
         return True
 
     @api.multi
+    def _validar_informacoes_para_cnab(self):
+        """
+        Validações antes de gerar o arquivo do CNAB
+        """
+        # Validar CPF no cadastro do parceiro
+        cpf_invalidos = []
+        nomes = ''
+        for line in self.line_ids:
+            if not line.partner_id.cnpj_cpf:
+                cpf_invalidos.append(line.partner_id.name)
+
+        if cpf_invalidos:
+            mensagem = 'CPF(s) inválido(s) para:'
+            for nome in cpf_invalidos:
+                nomes += '\n - ' + nome
+            raise ValidationError(_(mensagem + nomes))
+
+    @api.multi
     def launch_wizard(self):
         """Search for a wizard to launch according to the type.
         If type is manual. just confirm the order.
@@ -331,6 +349,8 @@ class PaymentOrder(models.Model):
         """
         context = self.env.context.copy()
         order = self[0]
+        order._validar_informacoes_para_cnab()
+
         # check if a wizard is defined for the first order
         if order.mode.type and order.mode.type.ir_model_id:
             context['active_ids'] = self.ids
