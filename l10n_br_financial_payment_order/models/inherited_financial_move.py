@@ -288,7 +288,7 @@ class FinancialMove(models.Model):
             mes = '0' + str(data_vencimento.month) if data_vencimento.month < \
                 10 else data_vencimento.month
             dados_darf['vencimento'] = \
-                dia + '/' + mes + '/' + str(data_vencimento.year)
+                str(dia) + '/' + mes + '/' + str(data_vencimento.year)
             valor_principal = financial_move.amount_document
             valor_multa = 0.00
             valor_juros_encargos = 0.00
@@ -357,7 +357,7 @@ class FinancialMove(models.Model):
             mes = '0' + str(data_vencimento.month) if data_vencimento.month < \
                 10 else data_vencimento.month
             dados_gps['vencimento'] = \
-                dia + '/' + mes + '/' + str(data_vencimento.year)
+                str(dia) + '/' + mes + '/' + str(data_vencimento.year)
             valor_inss, valor_outras_entidades = \
                 self._buscar_valores_inss(self.company_id.id)
             dados_gps['valor_inss'] = valor_inss
