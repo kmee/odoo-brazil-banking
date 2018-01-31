@@ -423,9 +423,11 @@ class Cnab240(Cnab):
             # 09.3B
             'favorecido_endereco_rua': line.partner_id.street or '',
             # 10.3B
-            'favorecido_endereco_num': int(line.partner_id.number) or 0,
+            'favorecido_endereco_num': 0,
             # 11.3B
-            'favorecido_endereco_complemento': line.partner_id.street2 or '',
+            'favorecido_endereco_complemento':
+                (line.partner_id.street2 or '') +
+                (line.partner_id.number or ''),
             # 12.3B
             'favorecido_endereco_bairro': line.partner_id.district or '',
             # 13.3B
