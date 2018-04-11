@@ -148,7 +148,8 @@ class Cnab240(Cnab):
             # 22.0
             'reservado_banco': '',
             # 23.0
-            'reservado_empresa': 'EMPRESA ' + str(self.order.company_id.id),
+            # 'reservado_empresa': 'EMPRESA ' + str(self.order.company_id.id),
+            'reservado_empresa': '',
             # 24.0
             # CNAB - Uso Exclusivo FEBRABAN / CNAB
         }
