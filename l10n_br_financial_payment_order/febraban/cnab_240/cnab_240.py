@@ -145,7 +145,7 @@ class Cnab240(Cnab):
             # 22.0
             'reservado_banco': '',
             # 23.0
-            'reservado_empresa': 'EMPRESA 100',
+            'reservado_empresa': '',
             # 24.0
             # CNAB - Uso Exclusivo FEBRABAN / CNAB
         }
