@@ -15,6 +15,11 @@
         <field name="arch" type="xml">
             <group name="document_identification" position="before">
                 <group name="boleto" colspan="4" col="4">
+                    <group name="descricao" colspan="4" col="4" attrs="{'invisible':[('descricao','=',False)]}">
+                        <div class="oe_title" colspan="4">
+                            <h1><field name="descricao" nolabel="1" /></h1>
+                        </div>
+                    </group>
                     <group name="codigo_barras" string="Integração Bancária" colspan="4" col="4">
                         <field name="boleto_linha_digitavel" colspan="4" />
                         <field name="boleto_codigo_barras" colspan="4" />

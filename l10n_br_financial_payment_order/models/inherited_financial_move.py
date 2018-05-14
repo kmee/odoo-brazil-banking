@@ -77,6 +77,11 @@ class FinancialMove(models.Model):
         string='Quantidade Total de empregados estabelecimentos'
     )
 
+
+    descricao = fields.Char(
+        string='Descrição da Movimentação financeira',
+    )
+
     def _trata_linha_digitavel(self):
         self.ensure_one()
 
