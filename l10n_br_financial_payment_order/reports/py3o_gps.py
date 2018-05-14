@@ -23,7 +23,7 @@ def extender_gps(pool, cr, uid, local_context, context):
     if local_context.get('active_id'):
 
         gps = pool['financial.move'].\
-            gera_gps(cr, uid, local_context.get('active_ids'))
+            gera_pdf_gps(cr, uid, local_context.get('active_ids'))
 
         vals = {'gps': [gps]}
         local_context.update(vals)

@@ -12,6 +12,7 @@ from pybrasil.febraban import (valida_codigo_barras, valida_linha_digitavel,
     identifica_codigo_barras, monta_linha_digitavel, monta_codigo_barras,
     formata_linha_digitavel)
 from pybrasil.inscricao import limpa_formatacao
+from pybrasil.valor import formata_valor
 
 from ..febraban.boleto.document import BoletoOdoo
 
@@ -273,7 +274,6 @@ class FinancialMove(models.Model):
             dados_darf['telefone'] = financial_move.partner_id.phone
             dados_darf['cnpj'] = financial_move.partner_id.cnpj_cpf
             dados_darf['periodo_apuracao'] = periodo_apuracao
-            # dados_darf['cod_receita'] = self._buscar_codigo_darf()
             dados_darf['cod_receita'] = financial_move.cod_receita
             # dados_darf['num_referencia'] =
             data_vencimento = \
@@ -288,11 +288,10 @@ class FinancialMove(models.Model):
             valor_multa = 0.00
             valor_juros_encargos = 0.00
             valor_total = valor_principal + valor_multa + valor_juros_encargos
-            dados_darf['valor_principal'] = '{:.2f}'.format(valor_principal)
+            dados_darf['valor_principal'] = formata_valor(valor_principal)
             dados_darf['valor_multa'] = '0,00'
             dados_darf['valor_juros_encargos'] = '0,00'
-            dados_darf['valor_total'] = '{:.2f}'.format(valor_total)
-
+            dados_darf['valor_total'] = formata_valor(valor_total)
         return DarfObj(dados_darf)
 
     @api.multi
@@ -336,11 +335,11 @@ class FinancialMove(models.Model):
                 10 else data_vencimento.month
             dados_gps['vencimento'] = \
                 str(dia) + '/' + str(mes) + '/' + str(data_vencimento.year)
-
-            valor_inss, valor_outras_entidades = \
-                self._buscar_valores_inss(self.company_id.id)
-            dados_gps['valor_inss'] = valor_inss
-            dados_gps['valor_outras_entidades'] = valor_outras_entidades
-            dados_gps['valor_total'] = financial_move.amount_document
+            dados_gps['valor_inss'] = \
+                formata_valor(float(financial_move.valor_inss))
+            dados_gps['valor_outras_entidades'] = \
+                formata_valor(float(financial_move.valor_inss_terceiros))
+            dados_gps['valor_total'] = \
+                formata_valor(financial_move.amount_document)
 
         return GpsObj(dados_gps)
