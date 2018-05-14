@@ -77,6 +77,16 @@ class FinancialMove(models.Model):
         string='Quantidade Total de empregados estabelecimentos'
     )
 
+    cod_receita = fields.Char(
+        string='Código da receita da DARF',
+    )
+
+    valor_inss_terceiros = fields.Char(
+        string='Valor do INSS de terceiros',
+    )
+    valor_inss = fields.Char(
+        string='Valor do INSS',
+    )
 
     descricao = fields.Char(
         string='Descrição da Movimentação financeira',
@@ -252,7 +262,11 @@ class FinancialMove(models.Model):
         return ''
 
     @api.multi
-    def gera_darf(self):
+    def gera_pdf_darf(self):
+        """
+        Função que implementa o relatório py3o da DARF
+        :return:
+        """
         class DarfObj(object):
             def __init__(self, dados_darf):
                 self.legal_name = dados_darf['legal_name']
@@ -272,19 +286,15 @@ class FinancialMove(models.Model):
             mes = financial_move.doc_source_id.mes
             ano = financial_move.doc_source_id.ano
             ultimo_dia_mes = self.last_day_of_month(
-                datetime.date(
-                    int(ano),
-                    int(mes),
-                    1
-                )
-            )
+                datetime.date(int(ano), int(mes), 1))
             periodo_apuracao = str(ultimo_dia_mes) + '/' + str(mes) + '/' + \
                 str(ano)
-            dados_darf['legal_name'] = financial_move.company_id.legal_name
-            dados_darf['telefone'] = financial_move.company_id.phone
-            dados_darf['cnpj'] = financial_move.company_id.cnpj_cpf
+            dados_darf['legal_name'] = financial_move.partner_id.legal_name
+            dados_darf['telefone'] = financial_move.partner_id.phone
+            dados_darf['cnpj'] = financial_move.partner_id.cnpj_cpf
             dados_darf['periodo_apuracao'] = periodo_apuracao
-            dados_darf['cod_receita'] = self._buscar_codigo_darf()
+            # dados_darf['cod_receita'] = self._buscar_codigo_darf()
+            dados_darf['cod_receita'] = financial_move.cod_receita
             # dados_darf['num_referencia'] =
             data_vencimento = \
                 fields.Date.from_string(financial_move.date_maturity)
@@ -293,13 +303,12 @@ class FinancialMove(models.Model):
             mes = '0' + str(data_vencimento.month) if data_vencimento.month < \
                 10 else data_vencimento.month
             dados_darf['vencimento'] = \
-                str(dia) + '/' + mes + '/' + str(data_vencimento.year)
+                str(dia) + '/' + str(mes) + '/' + str(data_vencimento.year)
             valor_principal = financial_move.amount_document
             valor_multa = 0.00
             valor_juros_encargos = 0.00
             valor_total = valor_principal + valor_multa + valor_juros_encargos
-            dados_darf['valor_principal'] = \
-                '{:.2f}'.format(valor_principal)
+            dados_darf['valor_principal'] = '{:.2f}'.format(valor_principal)
             dados_darf['valor_multa'] = '0,00'
             dados_darf['valor_juros_encargos'] = '0,00'
             dados_darf['valor_total'] = '{:.2f}'.format(valor_total)
@@ -323,7 +332,7 @@ class FinancialMove(models.Model):
         return valor_inss, valor_outras_entidades
 
     @api.multi
-    def gera_gps(self):
+    def gera_pdf_gps(self):
         class GpsObj(object):
             def __init__(self, dados_gps):
                 self.legal_name = dados_gps['legal_name']
@@ -362,7 +371,8 @@ class FinancialMove(models.Model):
             mes = '0' + str(data_vencimento.month) if data_vencimento.month < \
                 10 else data_vencimento.month
             dados_gps['vencimento'] = \
-                str(dia) + '/' + mes + '/' + str(data_vencimento.year)
+                str(dia) + '/' + str(mes) + '/' + str(data_vencimento.year)
+
             valor_inss, valor_outras_entidades = \
                 self._buscar_valores_inss(self.company_id.id)
             dados_gps['valor_inss'] = valor_inss

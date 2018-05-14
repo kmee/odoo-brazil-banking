@@ -8,7 +8,10 @@
             report_type="py3o"
             multi="1"
             name="l10n_br_financial_payment_order.py3o_darf"
+            attachment="'DARF - ' + str(object.date_document) + '.pdf'"
+            attachment_use="0"
         />
+        <!--attachment="(object.state in ('open','paid')) and ('INV'+(object.number or '').replace('/',''))"-->
 
         <record id="py3o_template_darf" model="py3o.template">
             <field name="name">Guia DARF</field>
@@ -18,8 +21,7 @@
 
         <record id="py3o_darf" model="ir.actions.report.xml">
             <field name="module">l10n_br_financial_payment_order</field>
-            <field name="py3o_fusion_filetype"
-                   ref="report_py3o.py3o_fusion_filetype_pdf"/>
+            <field name="py3o_fusion_filetype" ref="report_py3o.py3o_fusion_filetype_pdf"/>
             <field name="py3o_template_fallback">data/guia_darf.odt</field>
             <field name="py3o_template_id" ref="py3o_template_darf"/>
         </record>

@@ -8,6 +8,8 @@
             report_type="py3o"
             multi="1"
             name="l10n_br_financial_payment_order.py3o_gps"
+            attachment="'GPS.pdf'"
+            attachment_use="0"
         />
 
         <record id="py3o_template_gps" model="py3o.template">
@@ -18,8 +20,7 @@
 
         <record id="py3o_gps" model="ir.actions.report.xml">
             <field name="module">l10n_br_financial_payment_order</field>
-            <field name="py3o_fusion_filetype"
-                   ref="report_py3o.py3o_fusion_filetype_pdf"/>
+            <field name="py3o_fusion_filetype" ref="report_py3o.py3o_fusion_filetype_pdf"/>
             <field name="py3o_template_fallback">data/gps.odt</field>
             <field name="py3o_template_id" ref="py3o_template_gps"/>
         </record>

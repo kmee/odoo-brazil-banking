@@ -22,8 +22,8 @@ def extender_darf(pool, cr, uid, local_context, context):
 
     if local_context.get('active_id'):
 
-        darf = pool['financial.move'].\
-            gera_darf(cr, uid, local_context.get('active_ids'))
+        darf = pool['financial.move']. \
+            gera_pdf_darf(cr, uid, local_context.get('active_ids'))
 
         vals = {'darfs': [darf]}
         local_context.update(vals)
