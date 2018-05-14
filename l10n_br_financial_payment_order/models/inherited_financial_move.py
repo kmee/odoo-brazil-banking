@@ -242,26 +242,6 @@ class FinancialMove(models.Model):
         return next_month.day
 
     @api.multi
-    def _buscar_codigo_darf(self):
-        darfs = {}
-        for holerite in self.doc_source_id.folha_ids:
-            for line in holerite.line_ids:
-                if line.code == 'IRPF':
-                    if darfs.get(line.salary_rule_id.codigo_darf):
-                        darfs[line.salary_rule_id.codigo_darf] += \
-                            line.total
-                    else:
-                        darfs.update(
-                            {
-                                line.salary_rule_id.codigo_darf: line.total
-                            }
-                        )
-        for cod_darf in darfs:
-            if darfs[cod_darf] == self.amount_document:
-                return cod_darf
-        return ''
-
-    @api.multi
     def gera_pdf_darf(self):
         """
         Função que implementa o relatório py3o da DARF
@@ -314,22 +294,6 @@ class FinancialMove(models.Model):
             dados_darf['valor_total'] = '{:.2f}'.format(valor_total)
 
         return DarfObj(dados_darf)
-
-    @api.multi
-    def _buscar_valores_inss(self, company_id):
-        valor_inss = 0.0
-        valor_outras_entidades = 0.0
-        for holerite in self.doc_source_id.folha_ids:
-            if holerite.company_id.id == company_id:
-                for line in holerite.line_ids:
-                    if line.code in [
-                        'INSS', 'INSS_EMPRESA', 'INSS_RAT_FAP'
-                    ]:
-                        valor_inss += line.total
-                    if line.code == 'INSS_OUTRAS_ENTIDADES':
-                        valor_outras_entidades += line.total
-
-        return valor_inss, valor_outras_entidades
 
     @api.multi
     def gera_pdf_gps(self):
