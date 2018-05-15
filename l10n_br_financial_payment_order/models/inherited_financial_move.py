@@ -177,55 +177,60 @@ class FinancialMove(models.Model):
         boleto_list = []
 
         for financial_move in self:
-            # try:
-            if True:
-                #
-                # Para a carteira da guia sindical, o nosso número é sempre
-                # os 12 primeiros dígitos do CNPJ da empresa
-                #
-                if financial_move.payment_mode_id.boleto_carteira == 'SIND':
-                    nosso_numero = \
-                        limpa_formatacao(financial_move.company_id.cnpj_cpf)
-                    nosso_numero = nosso_numero[:12]
+
+            #
+            # Para a carteira da guia sindical, o nosso número é sempre
+            # os 12 primeiros dígitos do CNPJ da empresa
+            #
+            if financial_move.payment_mode_id.boleto_carteira in ['SIND', 'SIN']:
+                cnpj_cpf = limpa_formatacao(financial_move.company_id.cnpj_cpf)
+                nosso_numero = cnpj_cpf[:12]
+
+            # Se definirmos o nosso número no lançamento financeiro,
+            # sera propagado ao boleto
+            else:
+                if financial_move.nosso_numero:
+                    nosso_numero = financial_move.nosso_numero
+
+                # Caso nao seja definido manualmente, pegar o proximo da
+                # sequencia definida no modo de pagamento do bolto
                 else:
-                    if financial_move.nosso_numero:
-                        nosso_numero = financial_move.nosso_numero
-                    else:
-                        sequence_nosso_numero_id = \
-                            financial_move.payment_mode_id.\
-                                sequence_nosso_numero_id.id
+                    sequence_nosso_numero_id = \
+                        financial_move.payment_mode_id.\
+                            sequence_nosso_numero_id.id
 
-                        nosso_numero = self.env['ir.sequence'].next_by_id(
-                            sequence_nosso_numero_id
-                        )
-                        nosso_numero = str(nosso_numero)
+                    nosso_numero = self.env['ir.sequence'].next_by_id(
+                        sequence_nosso_numero_id)
 
-                boleto = BoletoOdoo(financial_move, nosso_numero)
+                    nosso_numero = str(nosso_numero)
 
-                if financial_move.payment_mode_id.boleto_carteira == 'SIND':
-                    boleto.boleto.cnae = \
-                        financial_move.company_id.cnae_main_id.code
-                    codigo_sindical = \
-                        financial_move.payment_mode_id.beneficiario_codigo
-                    codigo_sindical += \
-                        financial_move.payment_mode_id.beneficiario_digito
-                    boleto.boleto.codigo_sindical = codigo_sindical
+            boleto = BoletoOdoo(financial_move, nosso_numero)
 
-                    # Informações boleto para sindicato
-                    boleto.boleto.total_empregados = \
-                        financial_move.sindicato_total_empregados
-                    boleto.boleto.qtd_contribuintes = \
-                        financial_move.sindicato_qtd_contribuintes
-                    boleto.boleto.total_remuneracao_contribuintes = \
-                        financial_move.sindicato_total_remuneracao_contribuintes
+            if financial_move.payment_mode_id.boleto_carteira in ['SIN', 'SIND']:
+                boleto.boleto.cnae = \
+                    financial_move.company_id.cnae_main_id.code
+                codigo_sindical = \
+                    financial_move.payment_mode_id.beneficiario_codigo
+                codigo_sindical += \
+                    financial_move.payment_mode_id.beneficiario_digito
 
-                if boleto:
-                #     financial_move.date_payment_created = date.today()
-                #     financial_move.transaction_ref = \
-                #         boleto.boleto.format_nosso_numero()
-                    financial_move.nosso_numero = nosso_numero
+                boleto.boleto.codigo_sindical = codigo_sindical
 
-                boleto_list.append(boleto.boleto)
+                # Informações boleto para sindicato
+                boleto.boleto.total_empregados = \
+                    financial_move.sindicato_total_empregados
+                boleto.boleto.qtd_contribuintes = \
+                    financial_move.sindicato_qtd_contribuintes
+                boleto.boleto.total_remuneracao_contribuintes = \
+                    financial_move.sindicato_total_remuneracao_contribuintes
+
+            if boleto:
+            #     financial_move.date_payment_created = date.today()
+            #     financial_move.transaction_ref = \
+            #         boleto.boleto.format_nosso_numero()
+                financial_move.nosso_numero = float(nosso_numero)
+
+            boleto_list.append(boleto.boleto)
 
             # except BoletoException as be:
             #     _logger.error(be.message or be.value, exc_info=True)
