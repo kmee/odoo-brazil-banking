@@ -159,7 +159,7 @@ class FinancialMove(models.Model):
                     self, b'l10n_br_financial_payment_order.py3o_gps'
                 )
             # Boleto do Sindicato
-            elif financial_move.payment_mode_id.boleto_carteira == 'SIND':
+            elif financial_move.payment_mode_id.boleto_carteira in ['SIN','SIND']:
                 action = self.env['report'].get_action(
                     self,
                     b'l10n_br_financial_payment_order.py3o_boleto_sindicato'

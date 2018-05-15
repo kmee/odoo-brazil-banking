@@ -90,7 +90,7 @@ class BoletoOdoo(object):
         elif banco == '104':
             if carteira == 'Sigcb':
                 self.boleto = BoletoCaixaSigcb()
-            elif carteira == 'SIND':
+            elif carteira in ['SIND', 'SIN']:
                 self.boleto = BoletoCaixaSindicato()
             else:
                 self.boleto = BoletoCaixa()
@@ -196,7 +196,7 @@ class BoletoOdoo(object):
         #
         # A carteira de sindicato usa o tipo de serviço GRCSU
         #
-        if self.boleto.carteira == 'SIND':
+        if self.boleto.carteira in ['SIND', 'SIN']:
             self.boleto.especie_documento = 'GRCSU'
 
         else:
