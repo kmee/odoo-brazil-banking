@@ -12,6 +12,7 @@ from pybrasil.febraban import (valida_codigo_barras, valida_linha_digitavel,
     identifica_codigo_barras, monta_linha_digitavel, monta_codigo_barras,
     formata_linha_digitavel)
 from pybrasil.inscricao import limpa_formatacao
+from pybrasil.valor import formata_valor
 
 from ..febraban.boleto.document import BoletoOdoo
 
@@ -158,7 +159,7 @@ class FinancialMove(models.Model):
                     self, b'l10n_br_financial_payment_order.py3o_gps'
                 )
             # Boleto do Sindicato
-            elif financial_move.payment_mode_id.boleto_carteira == 'SIND':
+            elif financial_move.payment_mode_id.boleto_carteira in ['SIN','SIND']:
                 action = self.env['report'].get_action(
                     self,
                     b'l10n_br_financial_payment_order.py3o_boleto_sindicato'
@@ -176,55 +177,60 @@ class FinancialMove(models.Model):
         boleto_list = []
 
         for financial_move in self:
-            # try:
-            if True:
-                #
-                # Para a carteira da guia sindical, o nosso número é sempre
-                # os 12 primeiros dígitos do CNPJ da empresa
-                #
-                if financial_move.payment_mode_id.boleto_carteira == 'SIND':
-                    nosso_numero = \
-                        limpa_formatacao(financial_move.company_id.cnpj_cpf)
-                    nosso_numero = nosso_numero[:12]
+
+            #
+            # Para a carteira da guia sindical, o nosso número é sempre
+            # os 12 primeiros dígitos do CNPJ da empresa
+            #
+            if financial_move.payment_mode_id.boleto_carteira in ['SIND', 'SIN']:
+                cnpj_cpf = limpa_formatacao(financial_move.company_id.cnpj_cpf)
+                nosso_numero = cnpj_cpf[:12]
+
+            # Se definirmos o nosso número no lançamento financeiro,
+            # sera propagado ao boleto
+            else:
+                if financial_move.nosso_numero:
+                    nosso_numero = financial_move.nosso_numero
+
+                # Caso nao seja definido manualmente, pegar o proximo da
+                # sequencia definida no modo de pagamento do bolto
                 else:
-                    if financial_move.nosso_numero:
-                        nosso_numero = financial_move.nosso_numero
-                    else:
-                        sequence_nosso_numero_id = \
-                            financial_move.payment_mode_id.\
-                                sequence_nosso_numero_id.id
+                    sequence_nosso_numero_id = \
+                        financial_move.payment_mode_id.\
+                            sequence_nosso_numero_id.id
 
-                        nosso_numero = self.env['ir.sequence'].next_by_id(
-                            sequence_nosso_numero_id
-                        )
-                        nosso_numero = str(nosso_numero)
+                    nosso_numero = self.env['ir.sequence'].next_by_id(
+                        sequence_nosso_numero_id)
 
-                boleto = BoletoOdoo(financial_move, nosso_numero)
+                    nosso_numero = str(nosso_numero)
 
-                if financial_move.payment_mode_id.boleto_carteira == 'SIND':
-                    boleto.boleto.cnae = \
-                        financial_move.company_id.cnae_main_id.code
-                    codigo_sindical = \
-                        financial_move.payment_mode_id.beneficiario_codigo
-                    codigo_sindical += \
-                        financial_move.payment_mode_id.beneficiario_digito
-                    boleto.boleto.codigo_sindical = codigo_sindical
+            boleto = BoletoOdoo(financial_move, nosso_numero)
 
-                    # Informações boleto para sindicato
-                    boleto.boleto.total_empregados = \
-                        financial_move.sindicato_total_empregados
-                    boleto.boleto.qtd_contribuintes = \
-                        financial_move.sindicato_qtd_contribuintes
-                    boleto.boleto.total_remuneracao_contribuintes = \
-                        financial_move.sindicato_total_remuneracao_contribuintes
+            if financial_move.payment_mode_id.boleto_carteira in ['SIN', 'SIND']:
+                boleto.boleto.cnae = \
+                    financial_move.company_id.cnae_main_id.code
+                codigo_sindical = \
+                    financial_move.payment_mode_id.beneficiario_codigo
+                codigo_sindical += \
+                    financial_move.payment_mode_id.beneficiario_digito
 
-                if boleto:
-                #     financial_move.date_payment_created = date.today()
-                #     financial_move.transaction_ref = \
-                #         boleto.boleto.format_nosso_numero()
-                    financial_move.nosso_numero = nosso_numero
+                boleto.boleto.codigo_sindical = codigo_sindical
 
-                boleto_list.append(boleto.boleto)
+                # Informações boleto para sindicato
+                boleto.boleto.total_empregados = \
+                    financial_move.sindicato_total_empregados
+                boleto.boleto.qtd_contribuintes = \
+                    financial_move.sindicato_qtd_contribuintes
+                boleto.boleto.total_remuneracao_contribuintes = \
+                    financial_move.sindicato_total_remuneracao_contribuintes
+
+            if boleto:
+            #     financial_move.date_payment_created = date.today()
+            #     financial_move.transaction_ref = \
+            #         boleto.boleto.format_nosso_numero()
+                financial_move.nosso_numero = float(nosso_numero)
+
+            boleto_list.append(boleto.boleto)
 
             # except BoletoException as be:
             #     _logger.error(be.message or be.value, exc_info=True)
@@ -240,26 +246,6 @@ class FinancialMove(models.Model):
         next_month = any_day.replace(day=28) + datetime.timedelta(days=4)
         next_month -= datetime.timedelta(days=next_month.day)
         return next_month.day
-
-    @api.multi
-    def _buscar_codigo_darf(self):
-        darfs = {}
-        for holerite in self.doc_source_id.folha_ids:
-            for line in holerite.line_ids:
-                if line.code == 'IRPF':
-                    if darfs.get(line.salary_rule_id.codigo_darf):
-                        darfs[line.salary_rule_id.codigo_darf] += \
-                            line.total
-                    else:
-                        darfs.update(
-                            {
-                                line.salary_rule_id.codigo_darf: line.total
-                            }
-                        )
-        for cod_darf in darfs:
-            if darfs[cod_darf] == self.amount_document:
-                return cod_darf
-        return ''
 
     @api.multi
     def gera_pdf_darf(self):
@@ -293,7 +279,6 @@ class FinancialMove(models.Model):
             dados_darf['telefone'] = financial_move.partner_id.phone
             dados_darf['cnpj'] = financial_move.partner_id.cnpj_cpf
             dados_darf['periodo_apuracao'] = periodo_apuracao
-            # dados_darf['cod_receita'] = self._buscar_codigo_darf()
             dados_darf['cod_receita'] = financial_move.cod_receita
             # dados_darf['num_referencia'] =
             data_vencimento = \
@@ -308,28 +293,11 @@ class FinancialMove(models.Model):
             valor_multa = 0.00
             valor_juros_encargos = 0.00
             valor_total = valor_principal + valor_multa + valor_juros_encargos
-            dados_darf['valor_principal'] = '{:.2f}'.format(valor_principal)
+            dados_darf['valor_principal'] = formata_valor(valor_principal)
             dados_darf['valor_multa'] = '0,00'
             dados_darf['valor_juros_encargos'] = '0,00'
-            dados_darf['valor_total'] = '{:.2f}'.format(valor_total)
-
+            dados_darf['valor_total'] = formata_valor(valor_total)
         return DarfObj(dados_darf)
-
-    @api.multi
-    def _buscar_valores_inss(self, company_id):
-        valor_inss = 0.0
-        valor_outras_entidades = 0.0
-        for holerite in self.doc_source_id.folha_ids:
-            if holerite.company_id.id == company_id:
-                for line in holerite.line_ids:
-                    if line.code in [
-                        'INSS', 'INSS_EMPRESA', 'INSS_RAT_FAP'
-                    ]:
-                        valor_inss += line.total
-                    if line.code == 'INSS_OUTRAS_ENTIDADES':
-                        valor_outras_entidades += line.total
-
-        return valor_inss, valor_outras_entidades
 
     @api.multi
     def gera_pdf_gps(self):
@@ -372,11 +340,11 @@ class FinancialMove(models.Model):
                 10 else data_vencimento.month
             dados_gps['vencimento'] = \
                 str(dia) + '/' + str(mes) + '/' + str(data_vencimento.year)
-
-            valor_inss, valor_outras_entidades = \
-                self._buscar_valores_inss(self.company_id.id)
-            dados_gps['valor_inss'] = valor_inss
-            dados_gps['valor_outras_entidades'] = valor_outras_entidades
-            dados_gps['valor_total'] = financial_move.amount_document
+            dados_gps['valor_inss'] = \
+                formata_valor(float(financial_move.valor_inss))
+            dados_gps['valor_outras_entidades'] = \
+                formata_valor(float(financial_move.valor_inss_terceiros))
+            dados_gps['valor_total'] = \
+                formata_valor(financial_move.amount_document)
 
         return GpsObj(dados_gps)
