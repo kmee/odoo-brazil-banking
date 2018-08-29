@@ -282,7 +282,7 @@ class FinancialMove(models.Model):
             periodo_apuracao = str(ultimo_dia_mes) + '/' + str(mes) + '/' + \
                 str(ano)
             dados_darf['legal_name'] = financial_move.partner_id.legal_name
-            dados_darf['telefone'] = financial_move.partner_id.phone
+            dados_darf['telefone'] = financial_move.partner_id.phone or ''
             dados_darf['cnpj'] = financial_move.partner_id.cnpj_cpf
             dados_darf['periodo_apuracao'] = periodo_apuracao
             dados_darf['cod_receita'] = financial_move.cod_receita
@@ -328,7 +328,7 @@ class FinancialMove(models.Model):
         dados_gps = {}
         for financial_move in self:
             dados_gps['legal_name'] = financial_move.company_id.legal_name
-            dados_gps['telefone'] = financial_move.company_id.phone
+            dados_gps['telefone'] = financial_move.company_id.phone or ''
             dados_gps['cnpj'] = financial_move.company_id.cnpj_cpf
             dados_gps['endereco'] = financial_move.company_id.street
             dados_gps['numero'] = financial_move.company_id.number

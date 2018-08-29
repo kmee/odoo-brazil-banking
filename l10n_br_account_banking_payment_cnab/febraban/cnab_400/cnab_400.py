@@ -246,8 +246,8 @@ class Cnab400(Cnab):
             # 8 é Nota de cŕedito comercial
             'especie_titulo': int(self.order.mode.boleto_especie),
             'aceite_titulo': aceite,
-            'data_emissao_titulo': self.format_date(
-                line.ml_date_created),
+            'data_emissao_titulo': self.format_date(line.ml_date_created),
+
             # TODO: trazer taxa de juros do Odoo. Depende do valor do 27.3P
             # CEF/FEBRABAN e Itaú não tem.
             'juros_mora_data': self.format_date(
