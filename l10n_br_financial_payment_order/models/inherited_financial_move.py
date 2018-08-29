@@ -93,6 +93,12 @@ class FinancialMove(models.Model):
         string='Descrição da Movimentação financeira',
     )
 
+    num_referencia = fields.Char(
+        string='Número de referência',
+        help='Número de referência do documento.'
+             'No caso das DARFs será o número de identficação do beneficiário',
+    )
+
     def _trata_linha_digitavel(self):
         self.ensure_one()
 
@@ -260,7 +266,7 @@ class FinancialMove(models.Model):
                 self.cnpj = dados_darf['cnpj']
                 self.periodo_apuracao = dados_darf['periodo_apuracao']
                 self.cod_receita = dados_darf['cod_receita']
-                # self.num_referencia = dados_darf['num_referencia']
+                self.num_referencia = dados_darf['num_referencia']
                 self.vencimento = dados_darf['vencimento']
                 self.valor_principal = dados_darf['valor_principal']
                 self.valor_multa = dados_darf['valor_multa']
@@ -276,11 +282,11 @@ class FinancialMove(models.Model):
             periodo_apuracao = str(ultimo_dia_mes) + '/' + str(mes) + '/' + \
                 str(ano)
             dados_darf['legal_name'] = financial_move.partner_id.legal_name
-            dados_darf['telefone'] = financial_move.partner_id.phone
+            dados_darf['telefone'] = financial_move.partner_id.phone or ''
             dados_darf['cnpj'] = financial_move.partner_id.cnpj_cpf
             dados_darf['periodo_apuracao'] = periodo_apuracao
             dados_darf['cod_receita'] = financial_move.cod_receita
-            # dados_darf['num_referencia'] =
+            dados_darf['num_referencia'] = financial_move.num_referencia or ''
             data_vencimento = \
                 fields.Date.from_string(financial_move.date_maturity)
             dia = '0' + str(data_vencimento.day) if data_vencimento.day < \
@@ -322,7 +328,7 @@ class FinancialMove(models.Model):
         dados_gps = {}
         for financial_move in self:
             dados_gps['legal_name'] = financial_move.company_id.legal_name
-            dados_gps['telefone'] = financial_move.company_id.phone
+            dados_gps['telefone'] = financial_move.company_id.phone or ''
             dados_gps['cnpj'] = financial_move.company_id.cnpj_cpf
             dados_gps['endereco'] = financial_move.company_id.street
             dados_gps['numero'] = financial_move.company_id.number
