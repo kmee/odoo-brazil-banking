@@ -22,7 +22,7 @@
                     <field name="payment_mode_id" />
                 </field>
                 <button name="refund_sheet" position="after">
-                    <button name="create_payment_order" type="object" string="Add to Payment Order" />
+                    <button name="create_payment_order"  type="object" string="Add to Payment Order" />
                 </button>
                 <xpath expr="//notebook//page[@string='Holerite']" position="after">
                     <page string="Orderns de Pagamento">

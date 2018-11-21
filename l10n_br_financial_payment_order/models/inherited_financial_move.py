@@ -275,7 +275,7 @@ class FinancialMove(models.Model):
 
         dados_darf = {}
         for financial_move in self:
-            mes = financial_move.doc_source_id.mes
+            mes = financial_move.doc_source_id.mes_do_ano
             ano = financial_move.doc_source_id.ano
             ultimo_dia_mes = self.last_day_of_month(
                 datetime.date(int(ano), int(mes), 1))
@@ -336,7 +336,7 @@ class FinancialMove(models.Model):
             dados_gps['cidade'] = financial_move.company_id.l10n_br_city_id.name
             dados_gps['estado'] = financial_move.company_id.state_id.name
             dados_gps['cep'] = financial_move.company_id.zip
-            dados_gps['competencia'] = financial_move.doc_source_id.mes + \
+            dados_gps['competencia'] = str(financial_move.doc_source_id.mes_do_ano) + \
                 '/' + financial_move.doc_source_id.ano
             data_vencimento = \
                 fields.Date.from_string(financial_move.date_maturity)
